@@ -1,0 +1,7 @@
+backend/bin/
+backend/obj/
+backend/packages/
+backend/riderModule.iml
+backend/_ReSharper.Caches/
+backend/.idea/
+.DS_Store

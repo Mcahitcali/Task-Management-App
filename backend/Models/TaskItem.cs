@@ -11,7 +11,7 @@ namespace backend.Models
         public string Title { get; set; } = string.Empty;
         public string? Description { get; set; }
         public bool IsCompleted { get; set; } = false;
-        public DateTime CreatedDate { get; set; }
+        public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
         public DateTime? CompletedDate { get; set; }
     }
 }

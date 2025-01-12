@@ -1,4 +1,7 @@
 using backend.Data;
+using backend.Models;
+using backend.Repositories.Implementations;
+using backend.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,6 +14,10 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<TaskDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddScoped<ITaskRepository, TaskRepository>();
+builder.Services.AddScoped<IGenericRepository<TaskItem>, GenericRepository<TaskItem>>();
+
 
 var app = builder.Build();
 

@@ -23,6 +23,12 @@ namespace backend.Controllers
         public async Task<ActionResult<IEnumerable<TaskItem>>> GetAllTasks()
         {
             var tasks = await _taskRepository.GetAllAsync();
+            if (tasks == null)
+                return StatusCode(500, "Error retrieving tasks");
+
+            if (!tasks.Any())
+                return NotFound("No tasks found");
+                
             return Ok(tasks);
         }
 
@@ -76,20 +82,31 @@ namespace backend.Controllers
             }
 
             await _taskRepository.UpdateAsync(existingTask);
-            return NoContent();
+            return Ok(existingTask);
         }
 
         [HttpDelete("{id}")]
         public async Task<ActionResult<TaskItem>> DeleteTask(int id)
         {
+            var existingTask = await _taskRepository.GetByIdAsync(id);
+            if (existingTask == null)
+                return NotFound("Task not found");
+                
             await _taskRepository.DeleteAsync(id);
-            return NoContent();
+            return Ok();
         }
 
         [HttpGet("completed")]
         public async Task<ActionResult<IEnumerable<TaskItem>>> GetCompletedTasks()
         {
             var tasks = await _taskRepository.GetCompletedTasks();
+            
+            if (tasks == null)
+                return StatusCode(500, "Error retrieving completed tasks");
+                
+            if (!tasks.Any())
+                return NotFound("No completed tasks found");
+                
             return Ok(tasks);
         }
     }

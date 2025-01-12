@@ -46,6 +46,13 @@ function Auth() {
       if (response.ok) {
         const data = await response.json();
         localStorage.setItem('token', data.token);
+        const userInfo = {
+          firstName: data.firstName,
+          lastName: data.lastName,
+          tcKimlikNo: data.tcKimlikNo,
+          isAdmin: data.isAdmin
+        };
+        localStorage.setItem('userInfo', JSON.stringify(userInfo));
         navigate('/home');
       } else {
         const error = await response.json();

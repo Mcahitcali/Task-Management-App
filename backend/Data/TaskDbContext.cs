@@ -14,15 +14,21 @@ namespace backend.Data
             
         }
         public DbSet<TaskItem> Tasks { get; set; }
+        public DbSet<User> Users { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<TaskItem>()
-                .HasKey(t => t.Id);
+            modelBuilder.Entity<User>()
+                .HasIndex(u => u.TCKimlikNo)
+                .IsUnique();
 
-            modelBuilder.Entity<TaskItem>().ToTable("Tasks");
+            modelBuilder.Entity<TaskItem>()
+                .HasOne(t => t.User)
+                .WithMany(u => u.Tasks)
+                .HasForeignKey(t => t.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

@@ -1,13 +1,14 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Security.Claims;
 using backend.Models;
 using backend.Repositories.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace backend.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class TasksController : ControllerBase
@@ -19,12 +20,30 @@ namespace backend.Controllers
             _taskRepository = taskRepository;
         }
 
+        private int GetUserId()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            return int.Parse(userIdClaim?.Value ?? throw new UnauthorizedAccessException("User not authenticated"));
+        }
+
+        private bool IsAdmin()
+        {
+            return User.IsInRole("Admin");
+        }
+
         [HttpGet]
         public async Task<ActionResult<IEnumerable<TaskItem>>> GetAllTasks()
         {
             var tasks = await _taskRepository.GetAllAsync();
             if (tasks == null)
                 return StatusCode(500, "Error retrieving tasks");
+
+            // Filter tasks based on user role
+            if (!IsAdmin())
+            {
+                var userId = GetUserId();
+                tasks = tasks.Where(t => t.UserId == userId);
+            }
 
             if (!tasks.Any())
                 return NotFound("No tasks found");
@@ -38,6 +57,11 @@ namespace backend.Controllers
             var task = await _taskRepository.GetByIdAsync(id);
             if (task == null)
                 return NotFound("Task not found");
+
+            // Check if user has permission to view this task
+            if (!IsAdmin() && task.UserId != GetUserId())
+                return Forbid();
+
             return Ok(task);
         }
 
@@ -52,7 +76,8 @@ namespace backend.Controllers
                 Title = request.Title,
                 Description = request.Description,
                 CreatedDate = DateTime.UtcNow,
-                IsCompleted = false
+                IsCompleted = false,
+                UserId = GetUserId()
             };
 
             await _taskRepository.AddAsync(task);
@@ -68,6 +93,10 @@ namespace backend.Controllers
             var existingTask = await _taskRepository.GetByIdAsync(id);
             if (existingTask == null)
                 return NotFound("Task not found");
+
+            // Check if user has permission to update this task
+            if (!IsAdmin() && existingTask.UserId != GetUserId())
+                return Forbid();
 
             if (request.Title != null)
                 existingTask.Title = request.Title;
@@ -91,6 +120,10 @@ namespace backend.Controllers
             var existingTask = await _taskRepository.GetByIdAsync(id);
             if (existingTask == null)
                 return NotFound("Task not found");
+
+            // Check if user has permission to delete this task
+            if (!IsAdmin() && existingTask.UserId != GetUserId())
+                return Forbid();
                 
             await _taskRepository.DeleteAsync(id);
             return Ok();
@@ -103,6 +136,13 @@ namespace backend.Controllers
             
             if (tasks == null)
                 return StatusCode(500, "Error retrieving completed tasks");
+
+            // Filter tasks based on user role
+            if (!IsAdmin())
+            {
+                var userId = GetUserId();
+                tasks = tasks.Where(t => t.UserId == userId);
+            }
                 
             if (!tasks.Any())
                 return NotFound("No completed tasks found");

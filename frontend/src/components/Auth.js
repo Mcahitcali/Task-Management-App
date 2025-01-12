@@ -8,6 +8,8 @@ function Auth() {
     tcKimlikNo: '',
     password: ''
   });
+  const [loginError, setLoginError] = useState('');
+  const [registerError, setRegisterError] = useState('');
 
   const [registerData, setRegisterData] = useState({
     tcKimlikNo: '',
@@ -35,6 +37,7 @@ function Auth() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
+      setLoginError('');
       const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.LOGIN}`, {
         method: 'POST',
         headers: {
@@ -56,16 +59,17 @@ function Auth() {
         navigate('/home');
       } else {
         const error = await response.json();
-        alert(error.message || 'Login failed');
+        setLoginError(error.message || 'Login failed');
       }
     } catch (error) {
-      alert('An error occurred during login');
+      setLoginError('An error occurred during login');
     }
   };
 
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
+      setRegisterError('');
       const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REGISTER}`, {
         method: 'POST',
         headers: {
@@ -75,7 +79,6 @@ function Auth() {
       });
       
       if (response.ok) {
-        alert('Registration successful!');
         setLoginData({
           tcKimlikNo: registerData.tcKimlikNo,
           password: registerData.password
@@ -86,12 +89,13 @@ function Auth() {
           lastName: '',
           password: ''
         });
+        setRegisterError('Registration successful! You can now login.');
       } else {
         const error = await response.json();
-        alert(error.message || 'Registration failed');
+        setRegisterError(error.message || 'Registration failed');
       }
     } catch (error) {
-      alert('An error occurred during registration');
+      setRegisterError('An error occurred during registration');
     }
   };
 
@@ -109,6 +113,11 @@ function Auth() {
             {/* Login Form */}
             <div className="flex-1">
               <h3 className="text-xl font-bold text-gray-900 mb-6">Sign In</h3>
+              {loginError && (
+                <div className="mb-4 p-3 rounded-md bg-red-50 border border-red-200">
+                  <p className="text-sm text-red-600">{loginError}</p>
+                </div>
+              )}
               <form className="space-y-6" onSubmit={handleLogin}>
                 <div>
                   <label htmlFor="login-tcKimlikNo" className="block text-sm font-medium text-gray-700">
@@ -164,6 +173,11 @@ function Auth() {
             {/* Register Form */}
             <div className="flex-1">
               <h3 className="text-xl font-bold text-gray-900 mb-6">Create Account</h3>
+              {registerError && (
+                <div className={`mb-4 p-3 rounded-md ${registerError.includes('successful') ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+                  <p className={`text-sm ${registerError.includes('successful') ? 'text-green-600' : 'text-red-600'}`}>{registerError}</p>
+                </div>
+              )}
               <form className="space-y-6" onSubmit={handleRegister}>
                 <div>
                   <label htmlFor="register-tcKimlikNo" className="block text-sm font-medium text-gray-700">
